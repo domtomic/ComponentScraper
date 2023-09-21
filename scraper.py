@@ -14,9 +14,9 @@ componentsDict = {
 }
 
 if (page_target == "Tevetron"):
-    f = open('tevetron.csv', 'w', encoding='UTF8', newline='')
+    f = open('./database/tevetron.csv', 'w', encoding='UTF8', newline='')
 elif (page_target == "Elmatis"):
-    f = open('elmatis.csv', 'w', encoding='UTF8', newline='')
+    f = open('./database/elmatis.csv', 'w', encoding='UTF8', newline='')
 else:
     print("ERROR: Target website is not defined or invalid!")
     sys.exit(1)
@@ -85,22 +85,19 @@ elif (page_target == "Elmatis"):
     for subpage_link in category_links:
         URL_subpage = URL_base_2 + subpage_link
         elmatis_subpage = requests.get(URL_subpage)
-        print(URL_subpage)
         req_page = 1
         while True:
-            print(req_page)
-            req_page += 1
             elmatis_soup = BeautifulSoup(elmatis_subpage.content, "html.parser")
             if(elmatis_subpage.status_code != 200):
-                break
+                if (elmatis_soup.find("title").get_text() == "Specified cast is not valid."):
+                    elmatis_subpage = requests.get(URL_subpage)
+                    continue
+                else:
+                    break
             VIEWSTATEvalue  = elmatis_soup.find("input", id="__VIEWSTATE").get("value")
             VIEWSTATEGENERATORvalue  = elmatis_soup.find("input", id="__VIEWSTATEGENERATOR").get("value")
             EVENTVALIDATIONvalue  = elmatis_soup.find("input", id="__EVENTVALIDATION").get("value")
             results = elmatis_soup.find("table", class_="list")
-            component_PN = []
-            component_desc = []
-            component_price = []
-            component_stock = []
             rows = results.find_all("tr")
             Nrows = len(rows)
             ## last two rows are for page numbers
@@ -108,13 +105,15 @@ elif (page_target == "Elmatis"):
                 row = rows[i]
                 cells = row.find_all("td")
                 if (len(cells) > 0):
-                    component_PN.append(cells[0].text.strip())
-                    component_desc.append(cells[1].text.strip())
-                    component_price.append(cells[2].find("div", class_="price-kn").text.strip())
-                    component_stock.append(cells[3].text.strip())
+                    productNumber = cells[0].text.strip()
+                    productDesc = cells[1].text.strip()
+                    productPrice = cells[2].find("div", class_="price-kn").text.strip()
+                    productAvailability = cells[3].text.strip()
+                    writer.writerow([productNumber, productPrice, productDesc, productAvailability])
+            req_page += 1
             data = {
                 "__EVENTTARGET" : "ctl00$Main$ucProductList$grdProductListPublic",
-                "__EVENTARGUMENT" : "Page${}".format(req_page+1),
+                "__EVENTARGUMENT" : "Page${}".format(req_page),
                 "__VIEWSTATEGENERATOR" : VIEWSTATEGENERATORvalue,
                 "__VIEWSTATE" : VIEWSTATEvalue,
                 "__EVENTVALIDATION" : EVENTVALIDATIONvalue
