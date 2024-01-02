@@ -3,8 +3,8 @@ import requests
 from bs4 import BeautifulSoup
 import csv
 
-page_target = "Elmatis"
-page_category = "IC"
+page_target = "Tevetron"
+page_category = "batteries"
 
 componentsDict = {
     "Product Number" : "",
@@ -28,6 +28,8 @@ if (page_target == "Tevetron"):
         URL_base = "https://www.tevetron.hr/hr/webshop/ic/16/"
     elif (page_category == "transistors"):
         URL_base = "https://www.tevetron.hr/hr/webshop/tranzistori/68/"
+    elif (page_category == "batteries"):
+        URL_base = "https://www.tevetron.hr/hr/webshop/baterije/101/"
     else:
         print("ERROR: Tevetron doesn't have the requested category!")
         sys.exit(2)
@@ -43,7 +45,7 @@ elif (page_target == "Elmatis"):
 
 page = requests.get(URL_base)
 soup = BeautifulSoup(page.content, "html.parser")
-
+#print(soup)
 if (page_target == "Tevetron"):
     results = soup.find_all("div", class_="product-inner")
     i = 0
@@ -55,7 +57,7 @@ if (page_target == "Tevetron"):
             productAvailability = result.find("span", class_="raspolozivost_2 da").text.strip() if result.find("span", class_="raspolozivost_2 da") != None else result.find("span", class_="raspolozivost_2 ne").text.strip()
             writer.writerow([productNumber, productPrice, productPackage, productAvailability])
         i += 1
-        if (i%10 == 0):
+        if (i%1 == 0):
             print(f"Status: {i}.")
         URL = URL_base + str(i)
         page = requests.get(URL)
